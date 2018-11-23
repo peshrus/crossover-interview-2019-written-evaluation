@@ -1,0 +1,43 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="crossover" id="1001122001_create_tables">
+        <createTable tableName="member">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="pk_me"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="membership_status" type="VARCHAR(255)"/>
+            <column name="membership_start_date" type="Datetime"/>
+        </createTable>
+        <createTable tableName="book">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="pk_book"/>
+            </column>
+            <column name="title" type="VARCHAR(255)"/>
+        </createTable>
+        <createTable tableName="transaction">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="transaction"/>
+            </column>
+            <column name="book_id" type="BIGINT"/>
+            <column name="member_id" type="BIGINT"/>
+            <column name="date_of_issue" type="DATETIME"/>
+            <column name="date_of_return" type="DATETIME"/>
+        </createTable>
+        <addForeignKeyConstraint baseColumnNames="book_id"
+            baseTableName="transaction"
+            constraintName="fk_transaction_book"
+            onDelete="CASCADE"
+            onUpdate="RESTRICT"
+            referencedColumnNames="id"
+            referencedTableName="book"/>
+          <addForeignKeyConstraint baseColumnNames="member_id"
+            baseTableName="transaction"
+            constraintName="fk_transaction_member"
+            onDelete="CASCADE"
+            onUpdate="RESTRICT"
+            referencedColumnNames="id"
+            referencedTableName="member"/>
+    </changeSet>
+</databaseChangeLog>
