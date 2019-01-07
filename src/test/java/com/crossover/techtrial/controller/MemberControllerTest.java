@@ -1,5 +1,7 @@
 package com.crossover.techtrial.controller;
 
+import com.crossover.techtrial.model.Member;
+import com.crossover.techtrial.repositories.MemberRepository;
 import java.util.Objects;
 import org.junit.Assert;
 import org.junit.Before;
@@ -16,8 +18,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import com.crossover.techtrial.model.Member;
-import com.crossover.techtrial.repositories.MemberRepository;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -25,28 +25,28 @@ public class MemberControllerTest {
 
   @Mock
   private MemberController memberController;
-  
+
   @Autowired
   private TestRestTemplate template;
-  
+
   @Autowired
-  MemberRepository memberRepository;
-  
+  private MemberRepository memberRepository;
+
   @Before
   public void setup() {
     MockMvcBuilders.standaloneSetup(memberController).build();
   }
-  
+
   @Test
   public void testMemberRegistrationSuccessful() {
     HttpEntity<Object> member = getHttpEntity();
-    
+
     ResponseEntity<Member> response = template.postForEntity(
         "/api/member", member, Member.class);
-    
+
     Assert.assertEquals("test 1", Objects.requireNonNull(response.getBody()).getName());
-    Assert.assertEquals(200,response.getStatusCode().value());
-    
+    Assert.assertEquals(200, response.getStatusCode().value());
+
     //cleanup the user
     memberRepository.deleteById(response.getBody().getId());
   }
@@ -55,6 +55,7 @@ public class MemberControllerTest {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
     return new HttpEntity<>("{\"name\": \"test 1\", \"email\": \"test10000000000001@gmail.com\","
-        + " \"membershipStatus\": \"ACTIVE\",\"membershipStartDate\":\"2018-08-08T12:12:12\" }", headers);
+        + " \"membershipStatus\": \"ACTIVE\",\"membershipStartDate\":\"2018-08-08T12:12:12\" }",
+        headers);
   }
 }
