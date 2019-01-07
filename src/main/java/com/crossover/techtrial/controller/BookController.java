@@ -28,7 +28,7 @@ public class BookController {
    * PLEASE DO NOT CHANGE API SIGNATURE OR METHOD TYPE OF END POINTS
    */
   @GetMapping(path = "/api/book")
-  public ResponseEntity<List<Book>> getBooks() {
+  public ResponseEntity<List<Book>> getAllBooks() {
     return ResponseEntity.ok(bookService.getAll());
   }
 
@@ -44,7 +44,7 @@ public class BookController {
    * PLEASE DO NOT CHANGE API SIGNATURE OR METHOD TYPE OF END POINTS
    */
   @GetMapping(path = "/api/book/{book-id}")
-  public ResponseEntity<Book> getRideById(@PathVariable(name = "book-id") Long bookId) {
+  public ResponseEntity<Book> getBookById(@PathVariable(name = "book-id") Long bookId) {
     Book book = bookService.findById(bookId);
     if (book != null) {
       return ResponseEntity.ok(book);

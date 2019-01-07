@@ -53,8 +53,15 @@ public class TransactionController {
   @PatchMapping(path = "/api/transaction/{transaction-id}/return")
   public ResponseEntity<Transaction> returnBookTransaction(
       @PathVariable(name = "transaction-id") Long transactionId) {
-    Optional<Transaction> transaction = transactionRepository.findById(transactionId);
-    transaction.ifPresent(t -> t.setDateOfReturn(LocalDateTime.now()));
-    return ResponseEntity.ok().body(transaction.orElse(null));
+    final Optional<Transaction> transaction = transactionRepository.findById(transactionId);
+
+    if (transaction.isPresent()) {
+      final Transaction t = transaction.get();
+      t.setDateOfReturn(LocalDateTime.now());
+
+      return ResponseEntity.ok().body(t);
+    }
+
+    return ResponseEntity.notFound().build();
   }
 }

@@ -1,9 +1,15 @@
 package com.crossover.techtrial.controller;
 
+import static java.util.Objects.requireNonNull;
+import static org.junit.Assert.assertEquals;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
+
 import com.crossover.techtrial.model.Member;
 import com.crossover.techtrial.repositories.MemberRepository;
-import java.util.Objects;
-import org.junit.Assert;
+import java.util.HashMap;
+import java.util.List;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,6 +29,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class MemberControllerTest {
 
+  private static final String API_MEMBER = "/api/member";
+
   @Mock
   private MemberController memberController;
 
@@ -37,23 +45,55 @@ public class MemberControllerTest {
     MockMvcBuilders.standaloneSetup(memberController).build();
   }
 
+  @After
+  public void tearDown() {
+    memberRepository.deleteAll();
+  }
+
   @Test
-  public void testMemberRegistrationSuccessful() {
-    HttpEntity<Object> member = getHttpEntity();
+  @SuppressWarnings("unchecked")
+  public void registerGetAllGetMemberById() {
+    // Arrange
+    final HttpEntity<Object> newMember = getHttpEntity();
 
-    ResponseEntity<Member> response = template.postForEntity(
-        "/api/member", member, Member.class);
+    // Act
+    final ResponseEntity<Member> registerResponse = template.postForEntity(
+        API_MEMBER, newMember, Member.class);
+    final ResponseEntity<List> getAllResponse = template.getForEntity(API_MEMBER, List.class);
+    final Member registeredMember = requireNonNull(registerResponse.getBody());
+    final Long newMemberId = registeredMember.getId();
+    final ResponseEntity<Member> getMemberByIdResponse = template
+        .getForEntity(API_MEMBER + "/" + newMemberId, Member.class);
 
-    Assert.assertEquals("test 1", Objects.requireNonNull(response.getBody()).getName());
-    Assert.assertEquals(200, response.getStatusCode().value());
+    // Assert
+    assertEquals(OK.value(), registerResponse.getStatusCode().value());
+    final String expectedMemberName = "test 1";
+    assertEquals(expectedMemberName, registeredMember.getName());
 
-    //cleanup the user
-    memberRepository.deleteById(response.getBody().getId());
+    assertEquals(OK.value(), getAllResponse.getStatusCode().value());
+    final List<HashMap<String, String>> allMembers = requireNonNull(getAllResponse.getBody());
+    assertEquals(1, allMembers.size());
+    assertEquals(expectedMemberName, allMembers.get(0).get("name"));
+
+    assertEquals(OK.value(), getMemberByIdResponse.getStatusCode().value());
+    final Member memberById = requireNonNull(getMemberByIdResponse.getBody());
+    assertEquals(expectedMemberName, memberById.getName());
+  }
+
+  @Test
+  public void getMemberById_NotFound() {
+    // Act
+    final ResponseEntity<Member> getMemberByIdResponse = template
+        .getForEntity(API_MEMBER + "/100500", Member.class);
+
+    // Assert
+    assertEquals(NOT_FOUND.value(), getMemberByIdResponse.getStatusCode().value());
   }
 
   private HttpEntity<Object> getHttpEntity() {
-    HttpHeaders headers = new HttpHeaders();
+    final HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
+
     return new HttpEntity<>("{\"name\": \"test 1\", \"email\": \"test10000000000001@gmail.com\","
         + " \"membershipStatus\": \"ACTIVE\",\"membershipStartDate\":\"2018-08-08T12:12:12\" }",
         headers);
