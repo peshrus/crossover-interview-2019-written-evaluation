@@ -20,7 +20,6 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler
   public ResponseEntity<AbstractMap.SimpleEntry<String, String>> handle(Exception exception) {
-    // general exception
     LOG.error("Exception: Unable to process this request. ", exception);
     AbstractMap.SimpleEntry<String, String> response =
         new AbstractMap.SimpleEntry<>("message", "Unable to process this request.");

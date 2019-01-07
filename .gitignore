@@ -7,3 +7,5 @@ build/*
 target/*
 **/.DS_Store
 **/.settings
+.idea/
+!gradle/wrapper/gradle-wrapper.jar

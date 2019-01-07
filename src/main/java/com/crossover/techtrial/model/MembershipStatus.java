@@ -1,12 +1,6 @@
-/**
- * 
- */
 package com.crossover.techtrial.model;
 
-/**
- * @author kshah
- *
- */
+@SuppressWarnings("unused")
 public enum MembershipStatus {
   ACTIVE,
   INACTIVE,
