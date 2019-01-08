@@ -1,12 +1,17 @@
 package com.crossover.techtrial.controller;
 
+import static com.crossover.techtrial.model.MembershipStatus.ACTIVE;
 import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 
 import com.crossover.techtrial.model.Member;
 import com.crossover.techtrial.repositories.MemberRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import org.junit.After;
@@ -29,7 +34,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class MemberControllerTest {
 
-  private static final String API_MEMBER = "/api/member";
+  static final String API_MEMBER = "/api/member";
 
   @Mock
   private MemberController memberController;
@@ -39,6 +44,9 @@ public class MemberControllerTest {
 
   @Autowired
   private MemberRepository memberRepository;
+
+  @Autowired
+  private ObjectMapper objectMapper;
 
   @Before
   public void setup() {
@@ -52,36 +60,37 @@ public class MemberControllerTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void registerGetAllGetMemberById() {
+  public void saveFindAllFindById() throws Exception {
     // Arrange
-    final HttpEntity<Object> newMember = getHttpEntity();
+    final String expectedMemberName = "test 1";
+    final HttpEntity<String> newMember = getMemberHttpEntity(objectMapper, expectedMemberName,
+        "test10000000000001@gmail.com");
 
     // Act
-    final ResponseEntity<Member> registerResponse = template.postForEntity(
+    final ResponseEntity<Member> saveResponse = template.postForEntity(
         API_MEMBER, newMember, Member.class);
-    final ResponseEntity<List> getAllResponse = template.getForEntity(API_MEMBER, List.class);
-    final Member registeredMember = requireNonNull(registerResponse.getBody());
-    final Long newMemberId = registeredMember.getId();
-    final ResponseEntity<Member> getMemberByIdResponse = template
-        .getForEntity(API_MEMBER + "/" + newMemberId, Member.class);
+    final ResponseEntity<List> findAllResponse = template.getForEntity(API_MEMBER, List.class);
+    final Member registeredMember = requireNonNull(saveResponse.getBody());
+    final Long registeredMemberId = registeredMember.getId();
+    final ResponseEntity<Member> findMemberByIdResponse = template
+        .getForEntity(API_MEMBER + "/" + registeredMemberId, Member.class);
 
     // Assert
-    assertEquals(OK.value(), registerResponse.getStatusCode().value());
-    final String expectedMemberName = "test 1";
+    assertEquals(OK.value(), saveResponse.getStatusCode().value());
     assertEquals(expectedMemberName, registeredMember.getName());
 
-    assertEquals(OK.value(), getAllResponse.getStatusCode().value());
-    final List<HashMap<String, String>> allMembers = requireNonNull(getAllResponse.getBody());
+    assertEquals(OK.value(), findAllResponse.getStatusCode().value());
+    final List<HashMap<String, String>> allMembers = requireNonNull(findAllResponse.getBody());
     assertEquals(1, allMembers.size());
     assertEquals(expectedMemberName, allMembers.get(0).get("name"));
 
-    assertEquals(OK.value(), getMemberByIdResponse.getStatusCode().value());
-    final Member memberById = requireNonNull(getMemberByIdResponse.getBody());
+    assertEquals(OK.value(), findMemberByIdResponse.getStatusCode().value());
+    final Member memberById = requireNonNull(findMemberByIdResponse.getBody());
     assertEquals(expectedMemberName, memberById.getName());
   }
 
   @Test
-  public void getMemberById_NotFound() {
+  public void findById_NotFound() {
     // Act
     final ResponseEntity<Member> getMemberByIdResponse = template
         .getForEntity(API_MEMBER + "/100500", Member.class);
@@ -90,12 +99,53 @@ public class MemberControllerTest {
     assertEquals(NOT_FOUND.value(), getMemberByIdResponse.getStatusCode().value());
   }
 
-  private HttpEntity<Object> getHttpEntity() {
+  @Test
+  public void save_WrongEmail() throws Exception {
+    // Arrange
+    final HttpEntity<String> wrongMember1 = getMemberHttpEntity(objectMapper, "member 1",
+        "wrongEmail");
+    final HttpEntity<String> wrongMember2 = getMemberHttpEntity(objectMapper, "member 2",
+        "");
+
+    // Act
+    final ResponseEntity<Member> registerResponse1 = template.postForEntity(
+        API_MEMBER, wrongMember1, Member.class);
+    final ResponseEntity<Member> registerResponse2 = template.postForEntity(
+        API_MEMBER, wrongMember2, Member.class);
+
+    // Assert
+    assertEquals(BAD_REQUEST.value(), registerResponse1.getStatusCode().value());
+    assertEquals(BAD_REQUEST.value(), registerResponse2.getStatusCode().value());
+  }
+
+  @Test
+  public void save_NotUniqueEmail() throws Exception {
+    // Arrange
+    final HttpEntity<String> newMember = getMemberHttpEntity(objectMapper,
+        "test member", "test10000000000001@gmail.com");
+
+    // Act
+    final ResponseEntity<Member> registerResponse = template.postForEntity(
+        API_MEMBER, newMember, Member.class);
+    final ResponseEntity<Member> registerResponse2 = template.postForEntity(
+        API_MEMBER, newMember, Member.class);
+
+    // Assert
+    assertEquals(OK.value(), registerResponse.getStatusCode().value());
+    assertEquals(BAD_REQUEST.value(), registerResponse2.getStatusCode().value());
+  }
+
+  static HttpEntity<String> getMemberHttpEntity(ObjectMapper objectMapper, String name,
+      String email) throws JsonProcessingException {
     final HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
 
-    return new HttpEntity<>("{\"name\": \"test 1\", \"email\": \"test10000000000001@gmail.com\","
-        + " \"membershipStatus\": \"ACTIVE\",\"membershipStartDate\":\"2018-08-08T12:12:12\" }",
-        headers);
+    final Member member = new Member();
+    member.setName(name);
+    member.setEmail(email);
+    member.setMembershipStatus(ACTIVE);
+    member.setMembershipStartDate(LocalDateTime.of(2018, 8, 8, 12, 12, 12));
+
+    return new HttpEntity<>(objectMapper.writeValueAsString(member), headers);
   }
 }

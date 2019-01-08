@@ -3,7 +3,7 @@ package com.crossover.techtrial.dto;
 import lombok.Value;
 
 @Value
-public class TopMemberDTO {
+public class TopMemberDto {
 
   private final Long memberId;
 

@@ -1,0 +1,58 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+  <changeSet author="ruslan-peshchuk" id="requirements-implementation">
+    <addNotNullConstraint tableName="book" columnName="title" columnDataType="VARCHAR(255)"
+      constraintName="not_null_book_title"/>
+
+    <!-- See https://dba.stackexchange.com/questions/37014/in-what-data-type-should-i-store-an-email-address-in-database -->
+    <modifyDataType tableName="member" columnName="email" newDataType="VARCHAR(320)"/>
+    <addUniqueConstraint tableName="member" columnNames="email"
+      constraintName="unique_member_email"/>
+    <addNotNullConstraint tableName="member" columnName="email" columnDataType="VARCHAR(320)"
+      constraintName="not_null_member_email"/>
+    <addNotNullConstraint tableName="member" columnName="membership_status"
+      columnDataType="VARCHAR(255)"
+      constraintName="not_null_member_status"/>
+    <addNotNullConstraint tableName="member" columnName="membership_start_date"
+      columnDataType="DATETIME"
+      constraintName="not_null_member_start_date"/>
+    <update tableName="member">
+      <column name="membership_status" value="0"/>
+      <where>membership_status = 'ACTIVE'</where>
+    </update>
+    <update tableName="member">
+      <column name="membership_status" value="1"/>
+      <where>membership_status = 'INACTIVE'</where>
+    </update>
+    <update tableName="member">
+      <column name="membership_status" value="2"/>
+      <where>membership_status = 'BLOCKED'</where>
+    </update>
+    <modifyDataType tableName="member" columnName="membership_status" newDataType="TINYINT"/>
+
+    <addNotNullConstraint tableName="transaction" columnName="book_id" columnDataType="BIGINT"
+      constraintName="not_null_transaction_book_id"/>
+    <addNotNullConstraint tableName="transaction" columnName="member_id" columnDataType="BIGINT"
+      constraintName="not_null_transaction_member_id"/>
+    <addNotNullConstraint tableName="transaction" columnName="date_of_issue"
+      columnDataType="DATETIME" constraintName="not_null_transaction_date_of_issue"/>
+    <dropForeignKeyConstraint baseTableName="transaction" constraintName="fk_transaction_book"/>
+    <addForeignKeyConstraint baseColumnNames="book_id"
+      baseTableName="transaction"
+      constraintName="fk_transaction_book"
+      onDelete="RESTRICT"
+      onUpdate="CASCADE"
+      referencedColumnNames="id"
+      referencedTableName="book"/>
+    <dropForeignKeyConstraint baseTableName="transaction" constraintName="fk_transaction_member"/>
+    <addForeignKeyConstraint baseColumnNames="member_id"
+      baseTableName="transaction"
+      constraintName="fk_transaction_member"
+      onDelete="RESTRICT"
+      onUpdate="CASCADE"
+      referencedColumnNames="id"
+      referencedTableName="member"/>
+  </changeSet>
+</databaseChangeLog>

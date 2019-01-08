@@ -9,29 +9,37 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.validation.constraints.Pattern;
 import lombok.Data;
 
 @Entity
-@Table(name = "member")
 @Data
 public class Member implements Serializable {
 
-  private static final long serialVersionUID = 2665432587130651197L;
+  private static final long serialVersionUID = -6893229160264523024L;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  Long id;
+  private Long id;
 
-  @Column(name = "name")
+  @Column
   private String name;
 
-  @Column(name = "email")
+  /**
+   * Each member should have a valid unique email address. No two members can have the same email
+   * address.
+   */
+  @Column(unique = true, nullable = false)
+  @Pattern(regexp = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\."
+      + "[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
+      + "(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?",
+      message = "{invalid.email}")
   private String email;
 
-  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  @Enumerated(EnumType.ORDINAL)
   private MembershipStatus membershipStatus;
 
-  @Column(name = "membership_start_date")
+  @Column(nullable = false)
   private LocalDateTime membershipStartDate;
 }

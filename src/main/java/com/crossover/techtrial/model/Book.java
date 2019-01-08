@@ -6,11 +6,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Table;
 import lombok.Data;
 
 @Entity
-@Table(name = "book")
 @Data
 public class Book implements Serializable {
 
@@ -20,7 +18,6 @@ public class Book implements Serializable {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "title")
+  @Column(nullable = false)
   private String title;
-
 }

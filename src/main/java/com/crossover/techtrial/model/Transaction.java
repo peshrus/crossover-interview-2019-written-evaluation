@@ -7,39 +7,34 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "transaction")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Transaction implements Serializable {
 
-  private static final long serialVersionUID = -406402853696113486L;
+  private static final long serialVersionUID = 6550920618998435779L;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  Long id;
+  private Long id;
 
-  @OneToOne
-  @JoinColumn(name = "book_id", referencedColumnName = "id")
+  @OneToOne(optional = false)
   private Book book;
 
-  @OneToOne
-  @JoinColumn(name = "member_id", referencedColumnName = "id")
+  @OneToOne(optional = false)
   private Member member;
 
-  /**
-   * Date and time of issuance of this book
-   */
-  @Column(name = "date_of_issue")
+  @Column(nullable = false)
   private LocalDateTime dateOfIssue;
 
-  /**
-   * Date and time of return of this book
-   */
-  @Column(name = "date_of_return")
+  @Column
   private LocalDateTime dateOfReturn;
 }

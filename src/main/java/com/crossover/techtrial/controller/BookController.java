@@ -1,54 +1,57 @@
 package com.crossover.techtrial.controller;
 
+import static org.springframework.http.ResponseEntity.notFound;
+import static org.springframework.http.ResponseEntity.ok;
+
 import com.crossover.techtrial.model.Book;
-import com.crossover.techtrial.service.BookService;
+import com.crossover.techtrial.repositories.BookRepository;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * BookController for Book related APIs.
- */
 @RestController
+@RequestMapping(value = "/api/book")
 public class BookController {
 
-  private final BookService bookService;
+  // NOTE: A service layer should be added instead of the repository in case of complex logic on
+  // selected entities
+  private final BookRepository bookRepository;
 
   @Autowired
-  public BookController(BookService bookService) {
-    this.bookService = bookService;
+  public BookController(BookRepository bookRepository) {
+    this.bookRepository = bookRepository;
   }
 
   /*
    * PLEASE DO NOT CHANGE API SIGNATURE OR METHOD TYPE OF END POINTS
    */
-  @GetMapping(path = "/api/book")
-  public ResponseEntity<List<Book>> getAllBooks() {
-    return ResponseEntity.ok(bookService.getAll());
+  @GetMapping
+  public ResponseEntity<List<Book>> findAll() {
+    return ok(bookRepository.findAll());
   }
 
   /*
    * PLEASE DO NOT CHANGE API SIGNATURE OR METHOD TYPE OF END POINTS
    */
-  @PostMapping(path = "/api/book")
-  public ResponseEntity<Book> saveBook(@RequestBody Book book) {
-    return ResponseEntity.ok(bookService.save(book));
+  @PostMapping
+  public ResponseEntity<Book> save(@RequestBody Book book) {
+    return ok(bookRepository.save(book));
   }
 
   /*
    * PLEASE DO NOT CHANGE API SIGNATURE OR METHOD TYPE OF END POINTS
    */
-  @GetMapping(path = "/api/book/{book-id}")
-  public ResponseEntity<Book> getBookById(@PathVariable(name = "book-id") Long bookId) {
-    Book book = bookService.findById(bookId);
-    if (book != null) {
-      return ResponseEntity.ok(book);
-    }
-    return ResponseEntity.notFound().build();
+  @GetMapping(path = "/{book-id}")
+  public ResponseEntity<Book> findById(@PathVariable(name = "book-id") Long bookId) {
+    final Optional<Book> book = bookRepository.findById(bookId);
+
+    return book.map(ResponseEntity::ok).orElseGet(() -> notFound().build());
   }
 }

@@ -1,11 +1,12 @@
 package com.crossover.techtrial.controller;
 
-import com.crossover.techtrial.dto.TopMemberDTO;
+import com.crossover.techtrial.dto.TopMemberDto;
 import com.crossover.techtrial.model.Member;
-import com.crossover.techtrial.service.MemberService;
+import com.crossover.techtrial.repositories.MemberRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -13,45 +14,47 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping(value = "/api/member")
 public class MemberController {
 
-  private final MemberService memberService;
+  // NOTE: A service layer should be added instead of the repository in case of complex logic on
+  // selected entities
+  private final MemberRepository memberRepository;
 
   @Autowired
-  public MemberController(MemberService memberService) {
-    this.memberService = memberService;
+  public MemberController(MemberRepository memberRepository) {
+    this.memberRepository = memberRepository;
   }
 
   /*
    * PLEASE DO NOT CHANGE SIGNATURE OR METHOD TYPE OF END POINTS
    */
-  @PostMapping(path = "/api/member")
-  public ResponseEntity<Member> register(@RequestBody Member p) {
-    return ResponseEntity.ok(memberService.save(p));
+  @PostMapping
+  public ResponseEntity<Member> save(@RequestBody Member p) {
+    return ResponseEntity.ok(memberRepository.save(p));
   }
 
   /*
    * PLEASE DO NOT CHANGE API SIGNATURE OR METHOD TYPE OF END POINTS
    */
-  @GetMapping(path = "/api/member")
-  public ResponseEntity<List<Member>> getAll() {
-    return ResponseEntity.ok(memberService.findAll());
+  @GetMapping
+  public ResponseEntity<List<Member>> findAll() {
+    return ResponseEntity.ok(memberRepository.findAll());
   }
 
   /*
    * PLEASE DO NOT CHANGE API SIGNATURE OR METHOD TYPE OF END POINTS
    */
-  @GetMapping(path = "/api/member/{member-id}")
-  public ResponseEntity<Member> getMemberById(@PathVariable(name = "member-id") Long memberId) {
-    Member member = memberService.findById(memberId);
-    if (member != null) {
-      return ResponseEntity.ok(member);
-    }
-    return ResponseEntity.notFound().build();
+  @GetMapping(path = "/{member-id}")
+  public ResponseEntity<Member> findById(@PathVariable(name = "member-id") Long memberId) {
+    final Optional<Member> member = memberRepository.findById(memberId);
+
+    return member.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
   }
 
 
@@ -66,11 +69,11 @@ public class MemberController {
    *
    * @return top 5 members who issued the most books within the search duration
    */
-  @GetMapping(path = "/api/member/top-member")
-  public ResponseEntity<List<TopMemberDTO>> getTopMembers(
+  @GetMapping(path = "/top-member")
+  public ResponseEntity<List<TopMemberDto>> getTopMembers(
       @RequestParam(value = "startTime") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime startTime,
       @RequestParam(value = "endTime") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime endTime) {
-    List<TopMemberDTO> topDrivers = new ArrayList<>();
+    List<TopMemberDto> topDrivers = new ArrayList<>();
     /* Your Implementation Here. */
 
     return ResponseEntity.ok(topDrivers);
