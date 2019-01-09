@@ -55,7 +55,7 @@ public class TransactionServiceImpl implements TransactionService {
     if (!bookOptional.isPresent()) {
       // Member trying to issue a book which does not exist in our database, API should return
       // HTTP Status code 404.
-      throw new BookNotFoundException(bookId);
+      throw new BookNotFoundException();
     }
 
     return bookOptional.get();
@@ -68,7 +68,7 @@ public class TransactionServiceImpl implements TransactionService {
     if (notReturnedBook.isPresent()) {
       // Member is not allowed to issue a book which is already issued to someone and should
       // return HTTP Status code 403.
-      throw new BookNotReturnedException(notReturnedBook.get());
+      throw new BookNotReturnedException();
     }
   }
 
@@ -76,7 +76,7 @@ public class TransactionServiceImpl implements TransactionService {
     final Optional<Member> memberOptional = memberRepository.findById(memberId);
 
     if (!memberOptional.isPresent()) {
-      throw new MemberNotFoundException(memberId);
+      throw new MemberNotFoundException();
     }
 
     return memberOptional.get();
@@ -88,7 +88,7 @@ public class TransactionServiceImpl implements TransactionService {
     if (has5NotReturnedBooks) {
       // API should reject issuance of more than 5 books at a given time. If a member already has 5
       // books issued on his name, and try to issue another API should return HTTP Status code 403.
-      throw new MemberHas5IssuedBooksException(memberId);
+      throw new MemberHas5IssuedBooksException();
     }
   }
 
@@ -107,7 +107,7 @@ public class TransactionServiceImpl implements TransactionService {
     final Optional<Transaction> transactionOptional = transactionRepository.findById(transactionId);
 
     if (!transactionOptional.isPresent()) {
-      throw new TransactionNotFoundException(transactionId);
+      throw new TransactionNotFoundException();
     }
 
     return transactionOptional.get();
@@ -118,7 +118,7 @@ public class TransactionServiceImpl implements TransactionService {
       // After returning the book and completing the transaction by updating date of return, Any
       // subsequent request to return for the same transaction-id should return HTTP Status Code
       // 403. Valid value of Date Of Return field means books are returned.
-      throw new BookAlreadyReturnedException(transaction);
+      throw new BookAlreadyReturnedException();
     }
   }
 }
