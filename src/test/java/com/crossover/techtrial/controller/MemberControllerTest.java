@@ -1,14 +1,21 @@
 package com.crossover.techtrial.controller;
 
 import static com.crossover.techtrial.model.MembershipStatus.ACTIVE;
+import static java.time.format.DateTimeFormatter.ofPattern;
 import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
+import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 
+import com.crossover.techtrial.dto.TopMemberDto;
+import com.crossover.techtrial.model.Book;
 import com.crossover.techtrial.model.Member;
+import com.crossover.techtrial.model.Transaction;
+import com.crossover.techtrial.repositories.BookRepository;
 import com.crossover.techtrial.repositories.MemberRepository;
+import com.crossover.techtrial.repositories.TransactionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
@@ -23,12 +30,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -43,7 +52,13 @@ public class MemberControllerTest {
   private TestRestTemplate template;
 
   @Autowired
+  private BookRepository bookRepository;
+
+  @Autowired
   private MemberRepository memberRepository;
+
+  @Autowired
+  private TransactionRepository transactionRepository;
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -55,6 +70,8 @@ public class MemberControllerTest {
 
   @After
   public void tearDown() {
+    transactionRepository.deleteAll();
+    bookRepository.deleteAll();
     memberRepository.deleteAll();
   }
 
@@ -133,6 +150,101 @@ public class MemberControllerTest {
     // Assert
     assertEquals(OK.value(), registerResponse.getStatusCode().value());
     assertEquals(BAD_REQUEST.value(), registerResponse2.getStatusCode().value());
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void findTop5() {
+    // Arrange
+    final LocalDateTime startDate = LocalDateTime.of(2019, 1, 9, 0, 0);
+    final LocalDateTime endDate = startDate.plusDays(30);
+    prepareTop5Data(startDate, endDate);
+    final String url = prepareUrl(startDate, endDate);
+    final ParameterizedTypeReference<List<TopMemberDto>> typeRef =
+        new ParameterizedTypeReference<List<TopMemberDto>>() {
+        };
+
+    // Act
+    final ResponseEntity<List<TopMemberDto>> findTop5Response = template
+        .exchange(url, GET, null, typeRef);
+
+    // Assert
+    assertEquals(OK.value(), findTop5Response.getStatusCode().value());
+    final List<TopMemberDto> top5 = requireNonNull(findTop5Response.getBody());
+    assertEquals(5, top5.size());
+    assertEquals("Member 0", top5.get(0).getMemberName());
+    assertEquals(3, top5.get(0).getNumberOfBooks());
+    assertEquals("Member 1", top5.get(1).getMemberName());
+    assertEquals(2, top5.get(1).getNumberOfBooks());
+    assertEquals("Member 2", top5.get(2).getMemberName());
+    assertEquals(1, top5.get(2).getNumberOfBooks());
+    assertEquals("Member 3", top5.get(3).getMemberName());
+    assertEquals(1, top5.get(3).getNumberOfBooks());
+    assertEquals("Member 4", top5.get(4).getMemberName());
+    assertEquals(1, top5.get(4).getNumberOfBooks());
+  }
+
+  private void prepareTop5Data(LocalDateTime startDate, LocalDateTime endDate) {
+    final int booksMembersNumber = 15;
+    final Book[] books = new Book[booksMembersNumber];
+    final Member[] members = new Member[booksMembersNumber];
+
+    for (int i = 0; i < booksMembersNumber; i++) {
+      books[i] = bookRepository.save(Book.builder().title("Book " + i).build());
+      members[i] = memberRepository
+          .save(Member.builder()
+              .name("Member " + i)
+              .email("test" + i + "@crossover.com")
+              .membershipStartDate(LocalDateTime.now())
+              .membershipStatus(ACTIVE)
+              .build());
+    }
+
+    int memberNum = 0;
+    for (int i = 0; i < 8; i++) {
+      if (i == 3 || i >= 5) {
+        ++memberNum;
+      }
+
+      transactionRepository.save(Transaction.builder().book(books[i]).member(members[memberNum])
+          .dateOfIssue(startDate.plusDays(i)).dateOfReturn(endDate.minusDays(i)).build());
+    }
+
+    transactionRepository.save(
+        Transaction.builder().book(books[8]).member(members[5]).dateOfIssue(startDate.minusDays(1))
+            .dateOfReturn(endDate.plusDays(1)).build());
+    transactionRepository.save(
+        Transaction.builder().book(books[9]).member(members[6]).dateOfIssue(startDate)
+            .dateOfReturn(endDate.plusDays(1)).build());
+    transactionRepository.save(
+        Transaction.builder().book(books[10]).member(members[7]).dateOfIssue(startDate.minusDays(1))
+            .dateOfReturn(endDate).build());
+    transactionRepository.save(
+        Transaction.builder().book(books[11]).member(members[8]).dateOfIssue(startDate.plusDays(1))
+            .dateOfReturn(endDate.plusDays(1)).build());
+    transactionRepository.save(
+        Transaction.builder().book(books[12]).member(members[9]).dateOfIssue(startDate.minusDays(1))
+            .dateOfReturn(endDate.minusDays(1)).build());
+    transactionRepository.save(
+        Transaction.builder().book(books[13]).member(members[10]).dateOfIssue(startDate.plusDays(1))
+            .build());
+    transactionRepository.save(
+        Transaction.builder().book(books[14]).member(members[11]).dateOfIssue(startDate.plusDays(1))
+            .dateOfReturn(endDate.minusDays(1)).build());
+  }
+
+  private String prepareUrl(LocalDateTime startDate, LocalDateTime endDate) {
+    final String url = "http://localhost" + API_MEMBER + "/top-member";
+    final String startDateStr = startDate.format(ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
+    final String endTimeStr = endDate.format(ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
+
+    return UriComponentsBuilder.fromHttpUrl(url)
+        .queryParam("startTime", startDateStr)
+        .queryParam("endTime", endTimeStr)
+        .build()
+        .encode()
+        .toUriString()
+        .replace("http://localhost", "");
   }
 
   static HttpEntity<String> getMemberHttpEntity(ObjectMapper objectMapper, String name,

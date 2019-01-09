@@ -4,10 +4,10 @@ import com.crossover.techtrial.dto.TopMemberDto;
 import com.crossover.techtrial.model.Member;
 import com.crossover.techtrial.repositories.MemberRepository;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -70,13 +70,13 @@ public class MemberController {
    * @return top 5 members who issued the most books within the search duration
    */
   @GetMapping(path = "/top-member")
-  public ResponseEntity<List<TopMemberDto>> getTopMembers(
+  public ResponseEntity<List<TopMemberDto>> findTop5(
       @RequestParam(value = "startTime") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime startTime,
       @RequestParam(value = "endTime") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime endTime) {
-    List<TopMemberDto> topDrivers = new ArrayList<>();
-    /* Your Implementation Here. */
+    final List<TopMemberDto> result = memberRepository
+        .findTopMembers(startTime, endTime, PageRequest.of(0, 5));
 
-    return ResponseEntity.ok(topDrivers);
+    return ResponseEntity.ok(result);
 
   }
 }
