@@ -6,6 +6,7 @@ import static com.crossover.techtrial.controller.MemberControllerTest.API_MEMBER
 import static com.crossover.techtrial.controller.MemberControllerTest.getMemberHttpEntity;
 import static com.crossover.techtrial.controller.TransactionController.PARAM_BOOK_ID;
 import static com.crossover.techtrial.controller.TransactionController.PARAM_MEMBER_ID;
+import static com.crossover.techtrial.model.MembershipStatus.ACTIVE;
 import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.http.HttpMethod.PATCH;
@@ -20,6 +21,7 @@ import com.crossover.techtrial.repositories.BookRepository;
 import com.crossover.techtrial.repositories.MemberRepository;
 import com.crossover.techtrial.repositories.TransactionRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.After;
@@ -163,6 +165,36 @@ public class TransactionControllerTest {
     // Assert
     assertEquals(OK.value(), returnResponse1.getStatusCode().value());
     assertEquals(FORBIDDEN.value(), returnResponse2.getStatusCode().value());
+  }
+
+  @Test
+  public void issueMoreThan5Books() {
+    // Arrange
+    final Member savedMember = memberRepository.save(memberRepository.save(Member.builder()
+        .name("Test Member")
+        .email("test@crossover.com")
+        .membershipStartDate(LocalDateTime.now())
+        .membershipStatus(ACTIVE)
+        .build()));
+
+    for (int i = 0; i < 6; i++) {
+      final Book savedBook = bookRepository.save(Book.builder().title("Book " + i).build());
+
+      final Map<String, Long> transactionParams = new HashMap<>();
+      transactionParams.put(PARAM_BOOK_ID, savedBook.getId());
+      transactionParams.put(PARAM_MEMBER_ID, savedMember.getId());
+
+      // Act
+      final ResponseEntity<Transaction> transactionResponse = template
+          .postForEntity(API_TRANSACTION, transactionParams, Transaction.class);
+
+      // Assert
+      if (i < 5) {
+        assertEquals(OK.value(), transactionResponse.getStatusCode().value());
+      } else {
+        assertEquals(FORBIDDEN.value(), transactionResponse.getStatusCode().value());
+      }
+    }
   }
 
   private static HttpEntity<Object> patch() {

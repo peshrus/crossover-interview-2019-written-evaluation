@@ -37,6 +37,7 @@ public class TransactionServiceImpl implements TransactionService {
     final Book book = findAndCheckBook(bookId);
     checkBookReturned(bookId);
     final Member member = findAndCheckMember(memberId);
+    checkMemberCanIssueBook(memberId);
 
     // When issuing a book to a member, the application should update date of issuance
     final Transaction transaction = Transaction.builder()
@@ -79,6 +80,16 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     return memberOptional.get();
+  }
+
+  private void checkMemberCanIssueBook(Long memberId) {
+    final boolean has5NotReturnedBooks = transactionRepository.has5IssuedBooks(memberId);
+
+    if (has5NotReturnedBooks) {
+      // API should reject issuance of more than 5 books at a given time. If a member already has 5
+      // books issued on his name, and try to issue another API should return HTTP Status code 403.
+      throw new MemberHas5IssuedBooksException(memberId);
+    }
   }
 
   @Override
