@@ -43,7 +43,7 @@ public class TransactionController {
    * PLEASE DO NOT CHANGE SIGNATURE OR METHOD TYPE OF END POINTS
    */
   @PatchMapping(path = "/{transaction-id}/return")
-  public ResponseEntity<Transaction> returnBookTransaction(
+  public ResponseEntity<Transaction> returnBook(
       @PathVariable(name = "transaction-id") Long transactionId) {
     final Transaction result = transactionService.returnBook(transactionId);
 

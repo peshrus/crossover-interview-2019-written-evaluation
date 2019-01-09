@@ -1,4 +1,4 @@
-package com.crossover.techtrial.controller;
+package com.crossover.techtrial.model;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -13,10 +13,10 @@ public class MemberNameTrigger extends TriggerAdapter {
   @Override
   public void fire(Connection conn, ResultSet oldRow, ResultSet newRow) throws SQLException {
     final String newName = newRow.getString("name");
-    final Pattern pattern = Pattern.compile("^([a-zA-Z]+.+){2,100}$");
-    final Matcher matcher = pattern.matcher(newName);
+    final Pattern validNamePattern = Pattern.compile("^([a-zA-Z]+.+){2,100}$");
+    final Matcher validNameMatcher = validNamePattern.matcher(newName);
 
-    if (!matcher.matches()) {
+    if (!validNameMatcher.matches()) {
       throw new SQLException(
           "Name has to have the length of 2 to 100 and should always start with an alphabet");
     }

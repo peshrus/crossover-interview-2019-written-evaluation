@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TransactionRepository extends CrudRepository<Transaction, Long> {
 
+  // NOTE: perhaps it would be better to implement it as a trigger on the DB level
   @Query("SELECT t FROM Transaction t WHERE t.book.id = :bookId AND t.dateOfReturn IS NULL")
   Optional<Transaction> findNotReturnedBook(@Param("bookId") Long bookId);
 

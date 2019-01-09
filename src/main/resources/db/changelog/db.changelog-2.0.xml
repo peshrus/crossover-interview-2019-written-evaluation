@@ -40,7 +40,7 @@
       stripComments="true"/>
     <sql dbms="h2">
       CREATE TRIGGER trigger_member_name_check BEFORE INSERT ON member FOR EACH ROW CALL
-      "com.crossover.techtrial.controller.MemberNameTrigger";
+      "com.crossover.techtrial.model.MemberNameTrigger";
     </sql>
 
     <addNotNullConstraint tableName="transaction" columnName="book_id" columnDataType="BIGINT"

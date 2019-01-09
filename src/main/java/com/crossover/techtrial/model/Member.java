@@ -36,6 +36,7 @@ public class Member implements Serializable {
    * address.
    */
   @Column(unique = true, nullable = false)
+  // NOTE: perhaps it would be better to implement it as a trigger on the DB level
   @Pattern(regexp = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\."
       + "[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
       + "(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?",
