@@ -1,32 +1,20 @@
 buildscript {
     ext {
-        springBootVersion = "2.0.2.RELEASE"
-        gradleConsoleReporterVersion = "0.5.0"
-        gradleLombokVersion = "1.14"
         mockitoCoreVersion = "2.23.4"
         httpClientVersion = "4.5.6"
     }
-    repositories {
-        mavenCentral()
-        jcenter()
-        maven { url "http://repo.spring.io/plugins-release" }
-        maven { url "https://plugins.gradle.org/m2/" }
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-        classpath("com.github.ksoichiro:gradle-console-reporter:${gradleConsoleReporterVersion}")
-        classpath("io.franzbecker:gradle-lombok:${gradleLombokVersion}")
-    }
 }
 
-apply plugin: "java"
-apply plugin: "eclipse"
-apply plugin: "jacoco"
-apply plugin: "io.spring.dependency-management"
-apply plugin: "org.springframework.boot"
-apply plugin: "io.spring.dependency-management"
-apply plugin: "com.github.ksoichiro.console.reporter"
-apply plugin: "io.franzbecker.gradle-lombok"
+plugins {
+    id "java"
+    id "idea"
+    id "eclipse"
+    id "jacoco"
+    id "io.spring.dependency-management" version "1.0.6.RELEASE"
+    id "org.springframework.boot" version "2.0.2.RELEASE"
+    id "com.github.ksoichiro.console.reporter" version "0.5.0"
+    id "io.franzbecker.gradle-lombok" version "1.14"
+}
 
 group = "com.crossover"
 version = "0.0.1-SNAPSHOT"
@@ -36,19 +24,27 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    developmentOnly
+
+    runtimeClasspath {
+        extendsFrom developmentOnly
+    }
+}
+
 dependencies {
     compile("org.springframework.boot:spring-boot-starter")
+    compile("org.springframework.boot:spring-boot-starter-aop")
     compile("org.springframework.boot:spring-boot-starter-data-jpa")
-    compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.springframework.boot:spring-boot-starter-data-rest")
+    compile("org.springframework.boot:spring-boot-starter-web")
     compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     compile("org.liquibase:liquibase-core")
+    compile("mysql:mysql-connector-java")
 
-    runtime("org.springframework.boot:spring-boot-devtools")
-    runtime("mysql:mysql-connector-java")
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
 
     testCompile("com.h2database:h2")
-    testCompile("org.springframework.boot:spring-boot-starter-aop")
     testCompile("org.springframework.boot:spring-boot-starter-test")
     testCompile("org.mockito:mockito-core:${mockitoCoreVersion}")
     testCompile("org.apache.httpcomponents:httpclient:${httpClientVersion}")
@@ -57,4 +53,13 @@ dependencies {
 lombok {
     version = "1.18.4"
     sha256 = ""
+}
+
+jacocoTestReport {
+    afterEvaluate {
+        classDirectories = files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: ["com/crossover/techtrial/dto/**",
+                                        "com/crossover/techtrial/model/**"])
+        })
+    }
 }

@@ -1,5 +1,6 @@
 /.DS_Store
 bin/*
+out
 /.classpath
 /.project
 .gradle/*
