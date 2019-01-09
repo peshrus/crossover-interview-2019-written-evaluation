@@ -19,6 +19,7 @@ import com.crossover.techtrial.repositories.TransactionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import org.junit.After;
@@ -153,7 +154,6 @@ public class MemberControllerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void findTop5() {
     // Arrange
     final LocalDateTime startDate = LocalDateTime.of(2019, 1, 9, 0, 0);
@@ -245,6 +245,38 @@ public class MemberControllerTest {
         .encode()
         .toUriString()
         .replace("http://localhost", "");
+  }
+
+  @Test
+  public void save_WrongName() throws Exception {
+    // Arrange
+    final HttpEntity<String> wrongMember1 = getMemberHttpEntity(objectMapper, "",
+        "test10000000000001@gmail.com");
+    final HttpEntity<String> wrongMember2 = getMemberHttpEntity(objectMapper, "m",
+        "test10000000000001@gmail.com");
+    final String longName = makeLongName();
+    final HttpEntity<String> wrongMember3 = getMemberHttpEntity(objectMapper, longName,
+        "test10000000000001@gmail.com");
+
+    // Act
+    final ResponseEntity<Member> registerResponse1 = template.postForEntity(
+        API_MEMBER, wrongMember1, Member.class);
+    final ResponseEntity<Member> registerResponse2 = template.postForEntity(
+        API_MEMBER, wrongMember2, Member.class);
+    final ResponseEntity<Member> registerResponse3 = template.postForEntity(
+        API_MEMBER, wrongMember3, Member.class);
+
+    // Assert
+    assertEquals(BAD_REQUEST.value(), registerResponse1.getStatusCode().value());
+    assertEquals(BAD_REQUEST.value(), registerResponse2.getStatusCode().value());
+    assertEquals(BAD_REQUEST.value(), registerResponse3.getStatusCode().value());
+  }
+
+  private String makeLongName() {
+    final char[] longNameArr = new char[50];
+    Arrays.fill(longNameArr, 'a');
+
+    return Arrays.toString(longNameArr); // together with commas and brackets it'll be 101 character
   }
 
   static HttpEntity<String> getMemberHttpEntity(ObjectMapper objectMapper, String name,

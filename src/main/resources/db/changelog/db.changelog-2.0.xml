@@ -31,6 +31,17 @@
       <where>membership_status = 'BLOCKED'</where>
     </update>
     <modifyDataType tableName="member" columnName="membership_status" newDataType="TINYINT"/>
+    <sqlFile dbms="mysql"
+      encoding="utf8"
+      path="trigger_member_name_check.sql"
+      relativeToChangelogFile="true"
+      endDelimiter=""
+      splitStatements="false"
+      stripComments="true"/>
+    <sql dbms="h2">
+      CREATE TRIGGER trigger_member_name_check BEFORE INSERT ON member FOR EACH ROW CALL
+      "com.crossover.techtrial.controller.MemberNameTrigger";
+    </sql>
 
     <addNotNullConstraint tableName="transaction" columnName="book_id" columnDataType="BIGINT"
       constraintName="not_null_transaction_book_id"/>
