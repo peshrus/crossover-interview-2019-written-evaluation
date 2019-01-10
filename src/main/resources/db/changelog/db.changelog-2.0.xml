@@ -65,5 +65,11 @@
       onUpdate="CASCADE"
       referencedColumnNames="id"
       referencedTableName="member"/>
+    <createIndex indexName="idx_date_of_issue" tableName="transaction" unique="false">
+      <column name="date_of_issue" type="DATETIME"/>
+    </createIndex>
+    <createIndex indexName="idx_date_of_return" tableName="transaction" unique="false">
+      <column name="date_of_return" type="DATETIME"/>
+    </createIndex>
   </changeSet>
 </databaseChangeLog>
